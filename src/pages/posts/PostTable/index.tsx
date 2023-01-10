@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Table, Tag } from 'antd';
+import { Popconfirm, Space, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Button, Modal, Input } from 'antd';
 import { AtomicBlockUtils, convertFromRaw, convertToRaw, Editor, EditorState, RichUtils } from 'draft-js';
@@ -84,7 +84,7 @@ const PostTable: React.FC = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Button type='text' onClick={() => {
+          <Button type='dashed' onClick={() => {
             const contentState = convertFromRaw(JSON.parse(record.content));
 
             setEditorState(EditorState.createWithContent(contentState));
@@ -94,7 +94,9 @@ const PostTable: React.FC = () => {
             setMode("EDIT");
             setOpen(true);
           }}>Edit</Button>
-          <Button type='text' onClick={() => onDeletePost(record.key)}>Delete</Button>
+          <Popconfirm title="Sure to delete?" onConfirm={() => onDeletePost(record.key)}>
+            <Button type='ghost' style={{ backgroundColor: "red", color: "white" }}>Delete</Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -184,10 +186,18 @@ const PostTable: React.FC = () => {
     setOpen(true);
   }
 
+  const onLogout = () => {
+    localStorage.removeItem("accessToken");
+    navigate("/login");
+  }
+
+  const onCancel = () => {
+    setLoading(false);
+    setOpen(false);
+  }
+
   const onOk = async () => {
     try {
-      setLoading(true);
-
       if (mode === "EDIT") {
         await postService.updatePost(
           postId,
@@ -213,7 +223,7 @@ const PostTable: React.FC = () => {
           shortDescriptions,
           content: convertToRaw(editorState.getCurrentContent())
         });
-        
+
         postService.getPost().then(posts => {
           setPosts(posts.map((value: any) => ({ ...value, key: value.postId })));
         });
@@ -225,13 +235,8 @@ const PostTable: React.FC = () => {
       const msg = data?.msg || data?.message || "Something went wrong";
       alert(msg);
     }
-    setLoading(false);
   }
 
-  const onCancel = () => {
-    setLoading(false);
-    setOpen(false);
-  }
 
   let className = 'RichEditor-editor';
   var contentState = editorState?.getCurrentContent();
@@ -315,6 +320,7 @@ const PostTable: React.FC = () => {
         <Input.TextArea autoSize value={shortDescriptions} onChange={(e) => setShortDescriptions(e.target.value)} />
       </Modal>
       <Button type='primary' onClick={onCreatePost}>Create post</Button>
+      <Button type='primary' onClick={onLogout}>Logout</Button>
       <Table columns={columns} dataSource={posts} />
     </>
   );

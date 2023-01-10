@@ -1,5 +1,5 @@
 import axios from "axios"
-import { baseUrl } from "../common/constant"
+import { baseUrl } from "../../common/constant";
 import { IPostData } from "./post.interface";
 
 export const getPost = async () => {
